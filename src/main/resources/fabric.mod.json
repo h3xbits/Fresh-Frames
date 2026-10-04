@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "flush_frames",
+  "version": "${version}",
+  "name": "Flush Frames",
+  "description": "Item frames and paintings sit flush against thin blocks like fences, walls, doors, trapdoors, pressure plates and banners, and move with doors and trapdoors when they open.",
+  "authors": ["h3xbits"],
+  "contact": {
+    "sources": "https://github.com/h3xbits/flush-frames",
+    "issues": "https://github.com/h3xbits/flush-frames/issues"
+  },
+  "license": "LicenseRef-Flush-Frames (MIT, no selling)",
+  "icon": "assets/flush_frames/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.h3xbit.flushframes.FlushFrames"
+    ],
+    "client": [
+      "com.h3xbit.flushframes.FlushFramesClient"
+    ]
+  },
+  "mixins": [
+    "flush_frames.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

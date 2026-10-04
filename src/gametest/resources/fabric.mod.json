@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "flush_frames-gametest",
+  "version": "1.0.0",
+  "name": "Flush Frames Game Tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-client-gametest": [
+      "com.h3xbit.flushframes.gametest.PaintingClientGameTest",
+      "com.h3xbit.flushframes.gametest.ShowcaseClientGameTest"
+    ]
+  },
+  "depends": {
+    "flush_frames": "*"
+  }
+}
