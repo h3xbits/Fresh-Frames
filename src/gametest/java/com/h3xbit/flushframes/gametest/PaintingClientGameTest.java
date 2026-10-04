@@ -23,7 +23,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoorHingeSide;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.Half;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLVideo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +46,7 @@ public class PaintingClientGameTest implements FabricClientGameTest {
         List<String> failures = new ArrayList<>();
 
         // Keep the test window above other windows (without focusing it or grabbing the mouse)
-        context.runOnClient(client -> GLFW.glfwSetWindowAttrib(client.getWindow().handle(), GLFW.GLFW_FLOATING, GLFW.GLFW_TRUE));
+        context.runOnClient(client -> SDLVideo.SDL_SetWindowAlwaysOnTop(client.getWindow().handle(), true));
 
         try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
             TestServerContext server = singleplayer.getServer();

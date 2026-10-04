@@ -104,7 +104,7 @@ public abstract class BannerFrameMixin {
         double dz = sway.pivot.z - renderState.z - renderOffset.z;
 
         poseStack.translate(dx, dy, dz);
-        poseStack.mulPose(sway.rotation);
+        poseStack.rotate(sway.rotation);
         poseStack.translate(-dx, -dy, -dz);
 
         double cx = sway.center.x - renderState.x - renderOffset.x;
@@ -112,7 +112,7 @@ public abstract class BannerFrameMixin {
         double cz = sway.center.z - renderState.z - renderOffset.z;
 
         poseStack.translate(cx, cy, cz);
-        poseStack.mulPose(sway.yaw);
+        poseStack.rotate(sway.yaw);
         poseStack.translate(-cx, -cy, -cz);
     }
 
@@ -149,12 +149,12 @@ abstract class BannerOutlineMixin {
 
         poseStack.pushPose();
         poseStack.translate(0.5, 0.0, 0.5);
-        poseStack.mulPose(new Quaternionf().rotateY(-yRot * Mth.DEG_TO_RAD));
+        poseStack.rotate(new Quaternionf().rotateY(-yRot * Mth.DEG_TO_RAD));
         poseStack.translate(-0.5, 0.0, -0.5);
         submitNodeCollector.submitShapeOutline(poseStack, still, renderType, color, lineWidth, translucent);
 
         poseStack.translate(pivot.x, pivot.y, pivot.z);
-        poseStack.mulPose(new Quaternionf().rotateX(xRot));
+        poseStack.rotate(new Quaternionf().rotateX(xRot));
         poseStack.translate(-pivot.x, -pivot.y, -pivot.z);
         submitNodeCollector.submitShapeOutline(poseStack, Shapes.create(flag), renderType, color, lineWidth, translucent);
         poseStack.popPose();

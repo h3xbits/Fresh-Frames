@@ -25,9 +25,12 @@ import net.minecraft.world.level.block.WallBannerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.Half;
-import org.lwjgl.glfw.GLFW;
+import org.lwjgl.sdl.SDLVideo;
+import org.lwjgl.system.MemoryStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.IntBuffer;
 
 // Builds a few clean scenes and takes screenshots for the mod page. Only runs when the
 // FLUSH_FRAMES_SHOWCASE environment variable is set - the screenshots end up in
@@ -51,13 +54,15 @@ public class ShowcaseClientGameTest implements FabricClientGameTest {
         }
 
         // Full size window - the images get cropped afterwards
-        context.runOnClient(client -> GLFW.glfwMaximizeWindow(client.getWindow().handle()));
+        context.runOnClient(client -> SDLVideo.SDL_MaximizeWindow(client.getWindow().handle()));
         context.waitTicks(10);
         int[] size = context.computeOnClient(client -> {
-            int[] width = new int[1];
-            int[] height = new int[1];
-            GLFW.glfwGetFramebufferSize(client.getWindow().handle(), width, height);
-            return new int[]{width[0], height[0]};
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                IntBuffer width = stack.mallocInt(1);
+                IntBuffer height = stack.mallocInt(1);
+                SDLVideo.SDL_GetWindowSizeInPixels(client.getWindow().handle(), width, height);
+                return new int[]{width.get(0), height.get(0)};
+            }
         });
         LOGGER.info("Showcase window size {}x{}", size[0], size[1]);
         context.getInput().resizeWindow(size[0], size[1]);
