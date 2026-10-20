@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.WallBannerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.phys.AABB;
 import org.lwjgl.sdl.SDLVideo;
 import org.lwjgl.system.MemoryStack;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ public class ShowcaseClientGameTest implements FabricClientGameTest {
 
     private static final BlockPos[] DOORS = {new BlockPos(14, 100, 0), new BlockPos(16, 100, 0), new BlockPos(31, 100, 0)};
     private static final BlockPos[] TRAPDOORS = {new BlockPos(21, 100, 0), new BlockPos(23, 100, 0), new BlockPos(37, 100, 0)};
+    private static final BlockPos STUDIO = new BlockPos(0, 140, 45);
     private static final BlockPos[] PLATES = {new BlockPos(-16, 100, 0), new BlockPos(-14, 100, 0), new BlockPos(35, 100, 0)};
 
     public static boolean enabled() {
@@ -161,6 +163,35 @@ public class ShowcaseClientGameTest implements FabricClientGameTest {
             shot(context, server, "icon_source", 0.5, 100.5, 17.2, 0.5, 100.5, 14.5);
             server.runCommand("fill -3 99 12 3 103 12 minecraft:white_concrete");
             shot(context, server, "icon_source_light", 0.5, 100.5, 17.2, 0.5, 100.5, 14.5);
+
+            // Icon studio - subjects in a magenta box so the background can be cut out afterwards
+            buildIconStudio(server);
+            for (Item item : new Item[]{Items.DIAMOND_SWORD, Items.GOLDEN_APPLE, Items.DIAMOND, Items.COMPASS}) {
+                server.runOnServer(minecraftServer -> {
+                    ServerLevel level = minecraftServer.overworld();
+                    for (ItemFrame frame : level.getEntitiesOfClass(ItemFrame.class, new AABB(STUDIO).inflate(3))) {
+                        frame.discard();
+                    }
+                    frame(level, STUDIO.south(), Direction.SOUTH, item);
+                });
+                shot(context, server, "studio_fence_" + item.toString().replace("minecraft:", ""), 2.4, STUDIO.getY() + 1.15, STUDIO.getZ() + 3.4, 0.5, STUDIO.getY() + 0.42, STUDIO.getZ() + 1.0);
+            }
+            buildStudioDoor(server);
+            shot(context, server, "studio_door_closed", 2.9, STUDIO.getY() + 1.4, STUDIO.getZ() + 4.4, 0.5, STUDIO.getY() + 0.05, STUDIO.getZ() + 1.0);
+            server.runOnServer(minecraftServer -> {
+                ServerLevel level = minecraftServer.overworld();
+                BlockState state = level.getBlockState(STUDIO.below());
+                ((DoorBlock) state.getBlock()).setOpen(null, level, state, STUDIO.below(), true);
+            });
+            capture(context, "studio_door_open");
+
+            // Before/after: vanilla floats a frame half a block above a slab, the mod lays it on the slab.
+            // Pass 1 has the vanilla frame resting on a magenta block (cut out later), pass 2 has the bare slab.
+            buildStudioSlabs(server, true);
+            shot(context, server, "studio_slabs_frames", STUDIO.getX() + 0.5, STUDIO.getY() + 2.0, STUDIO.getZ() + 4.0, STUDIO.getX() + 0.5, STUDIO.getY() + 0.65, STUDIO.getZ() + 0.5);
+            buildStudioSlabs(server, false);
+            capture(context, "studio_slabs_bare");
+
             context.runOnClient(client -> client.options.fov().set(70));
             context.getInput().pressKey(options -> options.keyToggleGui);
         }
@@ -321,6 +352,49 @@ public class ShowcaseClientGameTest implements FabricClientGameTest {
         server.runCommand("fill -3 99 12 3 103 12 minecraft:gray_concrete");
         server.runCommand("setblock 0 100 14 minecraft:oak_fence");
         server.runOnServer(minecraftServer -> frame(minecraftServer.overworld(), new BlockPos(0, 100, 15), Direction.SOUTH, Items.EMERALD));
+    }
+
+    // Open-topped magenta box, with the subject floating in the middle
+    private static void buildIconStudio(TestServerContext server) {
+        int x = STUDIO.getX();
+        int y = STUDIO.getY();
+        int z = STUDIO.getZ();
+        server.runCommand(String.format("fill %d %d %d %d %d %d minecraft:magenta_concrete hollow", x - 9, y - 10, z - 9, x + 9, y + 40, z + 9));
+        server.runCommand(String.format("fill %d %d %d %d %d %d minecraft:air", x - 8, y + 40, z - 8, x + 8, y + 40, z + 8));
+        server.runCommand(String.format("fill %d %d %d %d %d %d minecraft:oak_fence", x, y - 2, z, x, y, z));
+    }
+
+    private static void buildStudioDoor(TestServerContext server) {
+        server.runCommand(String.format("fill %d %d %d %d %d %d minecraft:air", STUDIO.getX(), STUDIO.getY() - 2, STUDIO.getZ(), STUDIO.getX(), STUDIO.getY(), STUDIO.getZ()));
+        server.runOnServer(minecraftServer -> {
+            ServerLevel level = minecraftServer.overworld();
+            for (ItemFrame frame : level.getEntitiesOfClass(ItemFrame.class, new AABB(STUDIO).inflate(3))) {
+                frame.discard();
+            }
+            door(level, STUDIO.below(), Blocks.SPRUCE_DOOR.defaultBlockState());
+            frame(level, STUDIO.below().south(), Direction.SOUTH, Items.GOLDEN_APPLE);
+            frame(level, STUDIO.south(), Direction.SOUTH, Items.DIAMOND_SWORD);
+        });
+    }
+
+    private static void buildStudioSlabs(TestServerContext server, boolean withFrames) {
+        BlockPos vanilla = STUDIO.west();
+        BlockPos flush = STUDIO.east();
+        server.runCommand(String.format("fill %d %d %d %d %d %d minecraft:air", STUDIO.getX() - 3, STUDIO.getY() - 3, STUDIO.getZ() - 3, STUDIO.getX() + 3, STUDIO.getY() + 3, STUDIO.getZ() + 3));
+        server.runOnServer(minecraftServer -> {
+            ServerLevel level = minecraftServer.overworld();
+            for (ItemFrame frame : level.getEntitiesOfClass(ItemFrame.class, new AABB(STUDIO).inflate(4))) {
+                frame.discard();
+            }
+            if (withFrames) {
+                level.setBlock(vanilla, Blocks.CONCRETE.magenta().defaultBlockState(), 3);
+                level.setBlock(flush, Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
+                frame(level, vanilla.above(), Direction.UP, Items.GOLDEN_APPLE);
+                frame(level, flush.above(), Direction.UP, Items.GOLDEN_APPLE);
+            } else {
+                level.setBlock(vanilla, Blocks.SMOOTH_STONE_SLAB.defaultBlockState(), 3);
+            }
+        });
     }
 
     private static void door(ServerLevel level, BlockPos pos, BlockState door) {

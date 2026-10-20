@@ -1,5 +1,7 @@
 package com.h3xbit.flushframes.mixin;
 
+import com.h3xbit.flushframes.SafeLook;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.EntityType;
@@ -48,6 +50,10 @@ public abstract class AttachPaintingMixin extends HangingEntity {
 
         // Cashed references
         Painting painting = (Painting) (Object) this;
+        // Placed by world generation (a structure's painting): the blocks around can't be asked about yet
+        if (!SafeLook.canLook(painting.level(), blockPos.relative(direction.getOpposite()))) {
+            return;
+        }
         BlockState supportState = painting.level().getBlockState(blockPos.relative(direction.getOpposite()));
         Block block = supportState.getBlock();
         PaintingVariant variant = painting.getVariant().value();
@@ -62,7 +68,7 @@ public abstract class AttachPaintingMixin extends HangingEntity {
         // And every block behind it has to be the same block
         AABB supportBox = returnInfo.getReturnValue().move(direction.getStepX() * -0.5, 0, direction.getStepZ() * -0.5).deflate(1.0E-7);
         for (BlockPos support : BlockPos.betweenClosed(BlockPos.containing(supportBox.minX, supportBox.minY, supportBox.minZ), BlockPos.containing(supportBox.maxX, supportBox.maxY, supportBox.maxZ))) {
-            if (painting.level().getBlockState(support).getBlock() != block) {
+            if (!SafeLook.canLook(painting.level(), support) || painting.level().getBlockState(support).getBlock() != block) {
                 return;
             }
         }

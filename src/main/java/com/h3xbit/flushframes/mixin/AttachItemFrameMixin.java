@@ -1,5 +1,7 @@
 package com.h3xbit.flushframes.mixin;
 
+import com.h3xbit.flushframes.SafeLook;
+
 //import com.h3xbit.flushframes.ItemFrameBoxInvoker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -85,6 +87,11 @@ public abstract class AttachItemFrameMixin extends HangingEntity {
 
         // Cashed references
         ItemFrame itemFrame = (ItemFrame) (Object) this;
+        // Placed by world generation (a structure's frame): the blocks around can't be asked about yet
+        if (!SafeLook.canLook(itemFrame.level(), blockPos.relative(direction.getOpposite()))
+                || !SafeLook.canLook(itemFrame.level(), blockPos.relative(direction.getOpposite()).below())) {
+            return;
+        }
         BlockState supportState = itemFrame.level().getBlockState(blockPos.relative(direction.getOpposite()));
         Block block = supportState.getBlock();
 
